@@ -1,6 +1,11 @@
 package org.thinhdev.thebankproject.service.impl;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
 
 import org.thinhdev.thebankproject.dto.request.UserRequest;
@@ -13,14 +18,15 @@ import org.thinhdev.thebankproject.utils.AccountUtils;
 import java.math.BigDecimal;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
+@Slf4j
 public class UserServiceImpl implements UserService
 {
-    private final UserRepository userRepository;
+    UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository)
-    {
-        this.userRepository = userRepository;
-    }
+
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
