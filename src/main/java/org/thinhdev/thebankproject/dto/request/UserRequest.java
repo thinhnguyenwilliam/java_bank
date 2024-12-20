@@ -4,9 +4,9 @@ package org.thinhdev.thebankproject.dto.request;
 import lombok.*;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class UserRequest {
     private String firstName;
     private String lastName;
@@ -14,8 +14,6 @@ public class UserRequest {
     private String gender;
     private String address;
     private String stateOfOrigin;
-
-
     private String email;
     private String phoneNumber;
     private String alternativePhoneNumber;

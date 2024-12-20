@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
-import org.thinhdev.thebankproject.service.impl.UserService;
+import org.thinhdev.thebankproject.service.UserService;
 
 
 @RestController

@@ -1,4 +1,4 @@
-package org.thinhdev.thebankproject.service.impl;
+package org.thinhdev.thebankproject.service;
 
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;

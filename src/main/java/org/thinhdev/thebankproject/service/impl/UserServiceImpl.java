@@ -8,11 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
 
+import org.thinhdev.thebankproject.dto.EmailDetails;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
 import org.thinhdev.thebankproject.entity.User;
 import org.thinhdev.thebankproject.enums.UserStatus;
 import org.thinhdev.thebankproject.repository.UserRepository;
+import org.thinhdev.thebankproject.service.EmailService;
+import org.thinhdev.thebankproject.service.UserService;
 import org.thinhdev.thebankproject.utils.AccountUtils;
 
 import java.math.BigDecimal;
@@ -25,7 +28,7 @@ import java.math.BigDecimal;
 public class UserServiceImpl implements UserService
 {
     UserRepository userRepository;
-
+    EmailService emailService;
 
 
     @Override
@@ -52,7 +55,24 @@ public class UserServiceImpl implements UserService
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status(UserStatus.ACTIVE.name())
                 .build();
+
         User savedUser = userRepository.save(newUser);
+        String accountName = String.format("%s %s%s",
+                savedUser.getFirstName(),
+                savedUser.getLastName(),
+                savedUser.getOtherName() != null ? " " + savedUser.getOtherName() : "");
+
+        String emailMessage = String.format(
+                "Account created successfully.\nAccount Number: %s\nAccount Name: %s",
+                savedUser.getAccountNumber(), accountName);
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("Account Created")
+                .messageBody(emailMessage)
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_CREATION_SUCCESS_MESSAGE)
