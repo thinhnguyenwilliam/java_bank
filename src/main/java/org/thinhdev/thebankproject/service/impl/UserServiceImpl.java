@@ -63,8 +63,9 @@ public class UserServiceImpl implements UserService
                 savedUser.getOtherName() != null ? " " + savedUser.getOtherName() : "");
 
         String emailMessage = String.format(
-                "Account created successfully.\nAccount Number: %s\nAccount Name: %s",
+                "Account created successfully.%nAccount Number: %s%nAccount Name: %s",
                 savedUser.getAccountNumber(), accountName);
+
 
         EmailDetails emailDetails = EmailDetails.builder()
                 .recipient(savedUser.getEmail())

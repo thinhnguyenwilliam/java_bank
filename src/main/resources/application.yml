@@ -26,7 +26,7 @@ spring:
 
   # Datasource configuration
   datasource:
-    url: jdbc:mysql://localhost:3306/tja_bank
+    url: jdbc:mysql://mysql-container-8.0.39:3306/tja_bank
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver

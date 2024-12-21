@@ -8,7 +8,7 @@ import java.time.Year;
 public class AccountUtils
 {
     public static final String ACCOUNT_EXISTS_CODE = "001";
-    public static final String ACCOUNT_EXISTS_MESSAGE = "This user already has an account Created!";
+    public static final String ACCOUNT_EXISTS_MESSAGE = "This user already has an account Fail-Created!";
     public static final String ACCOUNT_CREATION_SUCCESS = "002";
     public static final String ACCOUNT_CREATION_SUCCESS_MESSAGE = "Account has been successfully Created!";
 
