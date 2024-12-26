@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
-
 import org.thinhdev.thebankproject.dto.EmailDetails;
+import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
 import org.thinhdev.thebankproject.entity.User;
@@ -25,15 +25,16 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
 @Slf4j
-public class UserServiceImpl implements UserService
-{
+public class UserServiceImpl implements UserService {
+
+    private static final String FULL_NAME_FORMAT = "%s %s %s";
+
     UserRepository userRepository;
     EmailService emailService;
 
-
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
-        if(Boolean.TRUE.equals(userRepository.existsByEmail(userRequest.getEmail()))) {
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(userRequest.getEmail()))) {
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_EXISTS_CODE)
                     .responseMessage(AccountUtils.ACCOUNT_EXISTS_MESSAGE)
@@ -57,15 +58,14 @@ public class UserServiceImpl implements UserService
                 .build();
 
         User savedUser = userRepository.save(newUser);
-        String accountName = String.format("%s %s%s",
+        String accountName = String.format(FULL_NAME_FORMAT,
                 savedUser.getFirstName(),
                 savedUser.getLastName(),
-                savedUser.getOtherName() != null ? " " + savedUser.getOtherName() : "");
+                savedUser.getOtherName() != null ? savedUser.getOtherName() : "").trim();
 
         String emailMessage = String.format(
                 "Account created successfully.%nAccount Number: %s%nAccount Name: %s",
                 savedUser.getAccountNumber(), accountName);
-
 
         EmailDetails emailDetails = EmailDetails.builder()
                 .recipient(savedUser.getEmail())
@@ -80,12 +80,50 @@ public class UserServiceImpl implements UserService
                 .accountInfo(AccountInfo.builder()
                         .accountBalance(savedUser.getAccountBalance())
                         .accountNumber(savedUser.getAccountNumber())
-                        .accountName(String.format("%s %s %s",
-                                savedUser.getFirstName(),
-                                savedUser.getLastName(),
-                                savedUser.getOtherName() != null ? savedUser.getOtherName() : "").trim())
+                        .accountName(accountName)
                         .build())
                 .build();
 
+    }
+
+    @Override
+    public BankResponse balanceEnquiry(EnquiryRequest enquiryRequest) {
+        boolean isAccountExist = Boolean.TRUE.equals(userRepository.existsByAccountNumber(enquiryRequest.getAccountNumber()));
+
+        if (!isAccountExist) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        User user = userRepository.findByAccountNumber(enquiryRequest.getAccountNumber());
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_FOUND_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_FOUND_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(user.getAccountBalance())
+                        .accountNumber(enquiryRequest.getAccountNumber())
+                        .accountName(String.format(FULL_NAME_FORMAT,
+                                user.getFirstName(),
+                                user.getLastName(),
+                                user.getOtherName()).trim())
+                        .build())
+                .build();
+    }
+
+    @Override
+    public String nameEnquiry(EnquiryRequest enquiryRequest) {
+        boolean isAccountExist = Boolean.TRUE.equals(userRepository.existsByAccountNumber(enquiryRequest.getAccountNumber()));
+        if (!isAccountExist) {
+            return AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE;
+        }
+
+        User user = userRepository.findByAccountNumber(enquiryRequest.getAccountNumber());
+        return String.format(FULL_NAME_FORMAT,
+                user.getFirstName(),
+                user.getLastName(),
+                user.getOtherName()).trim();
     }
 }
