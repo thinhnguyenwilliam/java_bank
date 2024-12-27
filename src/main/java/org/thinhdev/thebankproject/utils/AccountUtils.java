@@ -15,6 +15,8 @@ public class AccountUtils
     public static final String ACCOUNT_NOT_EXIST_MESSAGE = "User with the provided account does not exist!";
     public static final String ACCOUNT_FOUND_CODE = "004";
     public static final String ACCOUNT_FOUND_MESSAGE = "User found with the provided!";
+    public static final String ACCOUNT_CREDITED_SUCCESS = "005";
+    public static final String ACCOUNT_CREDITED_SUCCESS_MESSAGE = "User account credited successfully!";
 
 
     private static final int MIN = 100000;

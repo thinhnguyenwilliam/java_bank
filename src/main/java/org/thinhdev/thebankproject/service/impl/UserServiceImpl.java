@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
 import org.thinhdev.thebankproject.dto.EmailDetails;
+import org.thinhdev.thebankproject.dto.request.CreditDebitRequest;
 import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
@@ -126,4 +127,47 @@ public class UserServiceImpl implements UserService {
                 user.getLastName(),
                 user.getOtherName()).trim();
     }
+
+    @Override
+    public BankResponse creditAccount(CreditDebitRequest creditDebitRequest) {
+        // Check if account exists
+        boolean isAccountExist = Boolean.TRUE.equals(userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber()));
+
+        if (!isAccountExist) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Retrieve the user to credit
+        User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+
+        // Ensure account balance is initialized
+        BigDecimal currentBalance = userToCredit.getAccountBalance() != null ? userToCredit.getAccountBalance() : BigDecimal.ZERO;
+
+        // Ensure the amount to credit is valid
+        BigDecimal creditAmount = creditDebitRequest.getAmount() != null ? creditDebitRequest.getAmount() : BigDecimal.ZERO;
+
+        // Update the balance
+        userToCredit.setAccountBalance(currentBalance.add(creditAmount));
+        userRepository.save(userToCredit); // Save updated user balance to the database
+
+        // Build and return the response
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS)
+                .responseMessage(AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(userToCredit.getAccountBalance())
+                        .accountNumber(creditDebitRequest.getAccountNumber())
+                        .accountName(String.format(FULL_NAME_FORMAT,
+                                userToCredit.getFirstName(),
+                                userToCredit.getLastName(),
+                                userToCredit.getOtherName()).trim())
+                        .build())
+                .build();
+    }
+
+
 }

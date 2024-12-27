@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.thinhdev.thebankproject.dto.request.CreditDebitRequest;
 import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
@@ -35,5 +36,10 @@ public class UserController
     @GetMapping("/nameEnquiry")
     public String getNameEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
         return userService.nameEnquiry(enquiryRequest);
+    }
+
+    @GetMapping("/credit")
+    public BankResponse creditAccount(@RequestBody CreditDebitRequest request) {
+        return userService.creditAccount(request);
     }
 }
