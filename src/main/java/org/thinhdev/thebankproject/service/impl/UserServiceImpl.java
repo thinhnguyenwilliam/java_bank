@@ -128,12 +128,32 @@ public class UserServiceImpl implements UserService {
                 user.getOtherName()).trim();
     }
 
+    private User validateAndGetUser(String accountNumber) {
+        if (!Boolean.TRUE.equals(userRepository.existsByAccountNumber(accountNumber))) {
+            return null;
+        }
+        return userRepository.findByAccountNumber(accountNumber);
+    }
+
+    private BankResponse buildBankResponse(User user, String responseCode, String responseMessage) {
+        return BankResponse.builder()
+                .responseCode(responseCode)
+                .responseMessage(responseMessage)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(user.getAccountBalance())
+                        .accountNumber(user.getAccountNumber())
+                        .accountName(String.format(FULL_NAME_FORMAT,
+                                user.getFirstName(),
+                                user.getLastName(),
+                                user.getOtherName()).trim())
+                        .build())
+                .build();
+    }
+
     @Override
     public BankResponse creditAccount(CreditDebitRequest creditDebitRequest) {
-        // Check if account exists
-        boolean isAccountExist = Boolean.TRUE.equals(userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber()));
-
-        if (!isAccountExist) {
+        User userToCredit = validateAndGetUser(creditDebitRequest.getAccountNumber());
+        if (userToCredit == null) {
             return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
                     .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
@@ -141,33 +161,39 @@ public class UserServiceImpl implements UserService {
                     .build();
         }
 
-        // Retrieve the user to credit
-        User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        // Credit account
+        userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
+        userRepository.save(userToCredit);
 
-        // Ensure account balance is initialized
-        BigDecimal currentBalance = userToCredit.getAccountBalance() != null ? userToCredit.getAccountBalance() : BigDecimal.ZERO;
-
-        // Ensure the amount to credit is valid
-        BigDecimal creditAmount = creditDebitRequest.getAmount() != null ? creditDebitRequest.getAmount() : BigDecimal.ZERO;
-
-        // Update the balance
-        userToCredit.setAccountBalance(currentBalance.add(creditAmount));
-        userRepository.save(userToCredit); // Save updated user balance to the database
-
-        // Build and return the response
-        return BankResponse.builder()
-                .responseCode(AccountUtils.ACCOUNT_CREDITED_SUCCESS)
-                .responseMessage(AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE)
-                .accountInfo(AccountInfo.builder()
-                        .accountBalance(userToCredit.getAccountBalance())
-                        .accountNumber(creditDebitRequest.getAccountNumber())
-                        .accountName(String.format(FULL_NAME_FORMAT,
-                                userToCredit.getFirstName(),
-                                userToCredit.getLastName(),
-                                userToCredit.getOtherName()).trim())
-                        .build())
-                .build();
+        return buildBankResponse(userToCredit, AccountUtils.ACCOUNT_CREDITED_SUCCESS, AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE);
     }
 
+
+    @Override
+    public BankResponse debitAccount(CreditDebitRequest creditDebitRequest) {
+        User userToDebit = validateAndGetUser(creditDebitRequest.getAccountNumber());
+        if (userToDebit == null) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Check if sufficient balance exists
+        if (userToDebit.getAccountBalance().compareTo(creditDebitRequest.getAmount()) < 0) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+                    .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Debit account
+        userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
+        userRepository.save(userToDebit);
+
+        return buildBankResponse(userToDebit, AccountUtils.ACCOUNT_DEBITED_SUCCESS, AccountUtils.ACCOUNT_DEBITED_SUCCESS_MESSAGE);
+    }
 
 }

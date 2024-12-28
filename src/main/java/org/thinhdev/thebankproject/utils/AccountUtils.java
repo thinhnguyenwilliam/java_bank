@@ -17,7 +17,10 @@ public class AccountUtils
     public static final String ACCOUNT_FOUND_MESSAGE = "User found with the provided!";
     public static final String ACCOUNT_CREDITED_SUCCESS = "005";
     public static final String ACCOUNT_CREDITED_SUCCESS_MESSAGE = "User account credited successfully!";
-
+    public static final String INSUFFICIENT_BALANCE_CODE = "006";
+    public static final String INSUFFICIENT_BALANCE_MESSAGE = "User insufficient balance!";
+    public static final String ACCOUNT_DEBITED_SUCCESS = "007";
+    public static final String ACCOUNT_DEBITED_SUCCESS_MESSAGE = "Account debited successfully!";
 
     private static final int MIN = 100000;
     private static final int MAX = 999999;
