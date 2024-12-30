@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.thinhdev.thebankproject.dto.request.CreditDebitRequest;
 import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
+import org.thinhdev.thebankproject.dto.request.TransferRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
 import org.thinhdev.thebankproject.service.UserService;
@@ -46,5 +47,10 @@ public class UserController
     @PostMapping("/debit")
     public BankResponse debitAccount(@RequestBody CreditDebitRequest request) {
         return userService.debitAccount(request);
+    }
+
+    @PostMapping("/transfer")
+    public BankResponse transfer(@RequestBody TransferRequest request) {
+        return userService.transfer(request);
     }
 }

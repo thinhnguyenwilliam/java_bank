@@ -10,6 +10,7 @@ import org.thinhdev.thebankproject.dto.AccountInfo;
 import org.thinhdev.thebankproject.dto.EmailDetails;
 import org.thinhdev.thebankproject.dto.request.CreditDebitRequest;
 import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
+import org.thinhdev.thebankproject.dto.request.TransferRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
 import org.thinhdev.thebankproject.entity.User;
@@ -128,27 +129,7 @@ public class UserServiceImpl implements UserService {
                 user.getOtherName()).trim();
     }
 
-    private User validateAndGetUser(String accountNumber) {
-        if (!Boolean.TRUE.equals(userRepository.existsByAccountNumber(accountNumber))) {
-            return null;
-        }
-        return userRepository.findByAccountNumber(accountNumber);
-    }
 
-    private BankResponse buildBankResponse(User user, String responseCode, String responseMessage) {
-        return BankResponse.builder()
-                .responseCode(responseCode)
-                .responseMessage(responseMessage)
-                .accountInfo(AccountInfo.builder()
-                        .accountBalance(user.getAccountBalance())
-                        .accountNumber(user.getAccountNumber())
-                        .accountName(String.format(FULL_NAME_FORMAT,
-                                user.getFirstName(),
-                                user.getLastName(),
-                                user.getOtherName()).trim())
-                        .build())
-                .build();
-    }
 
     @Override
     public BankResponse creditAccount(CreditDebitRequest creditDebitRequest) {
@@ -194,6 +175,90 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userToDebit);
 
         return buildBankResponse(userToDebit, AccountUtils.ACCOUNT_DEBITED_SUCCESS, AccountUtils.ACCOUNT_DEBITED_SUCCESS_MESSAGE);
+    }
+
+    @Override
+    public BankResponse transfer(TransferRequest transferRequest) {
+        // Validate source and destination accounts
+        User sourceAccountUser = validateAndGetUser(transferRequest.getSourceAccountNumber());
+        User destinationAccountUser = validateAndGetUser(transferRequest.getDestinationAccountNumber());
+
+        if (sourceAccountUser == null || destinationAccountUser == null) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXIST_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXIST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Check if the source account has sufficient balance
+        if (transferRequest.getAmount().compareTo(sourceAccountUser.getAccountBalance()) > 0) {
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+                    .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+
+        // Perform the debit and credit transactions
+        sourceAccountUser.setAccountBalance(sourceAccountUser.getAccountBalance().subtract(transferRequest.getAmount()));
+        destinationAccountUser.setAccountBalance(destinationAccountUser.getAccountBalance().add(transferRequest.getAmount()));
+
+        // Save updated balances
+        userRepository.save(sourceAccountUser);
+        userRepository.save(destinationAccountUser);
+
+        // Send debit alert email
+        emailService.sendEmailAlert(EmailDetails.builder()
+                .subject("DEBIT ALERT")
+                .recipient(sourceAccountUser.getEmail())
+                .messageBody(String.format("The sum of %s has been debited from your account. Your current balance is %s.",
+                        transferRequest.getAmount(), sourceAccountUser.getAccountBalance()))
+                .build());
+
+        // Send credit alert email
+        emailService.sendEmailAlert(EmailDetails.builder()
+                .subject("CREDIT ALERT")
+                .recipient(destinationAccountUser.getEmail())
+                .messageBody(String.format("The sum of %s has been credited to your account from %s. Your current balance is %s.",
+                        transferRequest.getAmount(),
+                        String.format(FULL_NAME_FORMAT,
+                                sourceAccountUser.getFirstName(),
+                                sourceAccountUser.getLastName(),
+                                sourceAccountUser.getOtherName()).trim(),
+                        destinationAccountUser.getAccountBalance()))
+                .build());
+
+        // Return success response
+        return BankResponse.builder()
+                .responseCode(AccountUtils.TRANSFER_SUCCESSFUL_CODE)
+                .responseMessage(AccountUtils.TRANSFER_SUCCESSFUL_MESSAGE)
+                .accountInfo(null)
+                .build();
+    }
+
+
+    // Reusable Helper Method (as defined earlier)
+    private User validateAndGetUser(String accountNumber) {
+        if (!Boolean.TRUE.equals(userRepository.existsByAccountNumber(accountNumber))) {
+            return null;
+        }
+        return userRepository.findByAccountNumber(accountNumber);
+    }
+
+    private BankResponse buildBankResponse(User user, String responseCode, String responseMessage) {
+        return BankResponse.builder()
+                .responseCode(responseCode)
+                .responseMessage(responseMessage)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(user.getAccountBalance())
+                        .accountNumber(user.getAccountNumber())
+                        .accountName(String.format(FULL_NAME_FORMAT,
+                                user.getFirstName(),
+                                user.getLastName(),
+                                user.getOtherName()).trim())
+                        .build())
+                .build();
     }
 
 }

@@ -21,6 +21,10 @@ public class AccountUtils
     public static final String INSUFFICIENT_BALANCE_MESSAGE = "User insufficient balance!";
     public static final String ACCOUNT_DEBITED_SUCCESS = "007";
     public static final String ACCOUNT_DEBITED_SUCCESS_MESSAGE = "Account debited successfully!";
+    public static final String TRANSFER_SUCCESSFUL_CODE = "008";
+    public static final String TRANSFER_SUCCESSFUL_MESSAGE = "Transfer successfully!";
+
+
 
     private static final int MIN = 100000;
     private static final int MAX = 999999;
