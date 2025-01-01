@@ -1,6 +1,6 @@
 package org.thinhdev.thebankproject.dto;
 
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +13,22 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class AccountInfo {
-    private String accountNumber;
-    private String accountName;
-    private BigDecimal accountBalance;
 
+    @Schema(
+            description = "Unique identifier for the user account",
+            example = "123456789"
+    )
+    private String accountNumber;
+
+    @Schema(
+            description = "Name associated with the user account",
+            example = "John Doe"
+    )
+    private String accountName;
+
+    @Schema(
+            description = "Current balance in the user account",
+            example = "1500.75"
+    )
+    private BigDecimal accountBalance;
 }

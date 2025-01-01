@@ -1,5 +1,6 @@
 package org.thinhdev.thebankproject.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -11,6 +12,8 @@ import org.thinhdev.thebankproject.dto.request.TransferRequest;
 import org.thinhdev.thebankproject.dto.request.UserRequest;
 import org.thinhdev.thebankproject.dto.response.BankResponse;
 import org.thinhdev.thebankproject.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 
 @RestController
@@ -18,12 +21,18 @@ import org.thinhdev.thebankproject.service.UserService;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
+@Tag(name = "User Account Management APIs")
 public class UserController
 {
 
     UserService userService;
 
-
+    @Operation(summary = "Get greeting message",
+            description = "Returns a simple greeting message",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Success"),
+                    @ApiResponse(responseCode = "400", description = "Bad Request")
+            })
     @PostMapping
     public BankResponse createAccount(@RequestBody UserRequest userRequest) {
         return userService.createAccount(userRequest);
