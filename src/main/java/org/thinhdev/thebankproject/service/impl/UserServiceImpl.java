@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
 import org.thinhdev.thebankproject.dto.EmailDetails;
+import org.thinhdev.thebankproject.dto.TransactionDto;
 import org.thinhdev.thebankproject.dto.request.CreditDebitRequest;
 import org.thinhdev.thebankproject.dto.request.EnquiryRequest;
 import org.thinhdev.thebankproject.dto.request.TransferRequest;
@@ -17,6 +18,7 @@ import org.thinhdev.thebankproject.entity.User;
 import org.thinhdev.thebankproject.enums.UserStatus;
 import org.thinhdev.thebankproject.repository.UserRepository;
 import org.thinhdev.thebankproject.service.EmailService;
+import org.thinhdev.thebankproject.service.TransactionService;
 import org.thinhdev.thebankproject.service.UserService;
 import org.thinhdev.thebankproject.utils.AccountUtils;
 
@@ -33,6 +35,7 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     EmailService emailService;
+    TransactionService transactionService;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -146,6 +149,14 @@ public class UserServiceImpl implements UserService {
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
 
+        //Save Transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+                .accountNumber(userToCredit.getAccountNumber())
+                .transactionType("CREDIT")
+                .amount(creditDebitRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(transactionDto);
+
         return buildBankResponse(userToCredit, AccountUtils.ACCOUNT_CREDITED_SUCCESS, AccountUtils.ACCOUNT_CREDITED_SUCCESS_MESSAGE);
     }
 
@@ -173,6 +184,14 @@ public class UserServiceImpl implements UserService {
         // Debit account
         userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
         userRepository.save(userToDebit);
+
+        //Save Transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+                .accountNumber(userToDebit.getAccountNumber())
+                .transactionType("DEBIT")
+                .amount(creditDebitRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(transactionDto);
 
         return buildBankResponse(userToDebit, AccountUtils.ACCOUNT_DEBITED_SUCCESS, AccountUtils.ACCOUNT_DEBITED_SUCCESS_MESSAGE);
     }
@@ -228,6 +247,14 @@ public class UserServiceImpl implements UserService {
                                 sourceAccountUser.getOtherName()).trim(),
                         destinationAccountUser.getAccountBalance()))
                 .build());
+
+        //Save Transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+                .accountNumber(destinationAccountUser.getAccountNumber())
+                .transactionType("CREDIT")
+                .amount(transferRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(transactionDto);
 
         // Return success response
         return BankResponse.builder()
