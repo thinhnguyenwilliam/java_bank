@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thinhdev.thebankproject.dto.AccountInfo;
@@ -36,6 +37,7 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     EmailService emailService;
     TransactionService transactionService;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -56,6 +58,7 @@ public class UserServiceImpl implements UserService {
                 .stateOfOrigin(userRequest.getStateOfOrigin())
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .accountBalance(BigDecimal.ZERO)
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
@@ -287,5 +290,4 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .build();
     }
-
 }
